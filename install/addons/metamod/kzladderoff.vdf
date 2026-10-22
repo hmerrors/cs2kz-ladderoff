@@ -1,0 +1,5 @@
+"Metamod Plugin"
+{
+    "alias" "kzladderoff"
+    "file" "addons/kzladderoff/bin/win64/kzladderoff"
+}

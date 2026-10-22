@@ -1,0 +1,37 @@
+import os
+
+
+proto_paths = [
+    'common/valveextensions.proto',
+    'common/network_connection.proto',
+    'common/networkbasetypes.proto',
+    'game/shared/usermessages.proto',
+    'game/shared/gameevents.proto',
+]
+proto = builder.tools.Protoc(
+    protoc=target.protoc,
+    sources=[os.path.join(sdk['path'], path) for path in proto_paths],
+)
+
+binary = cxx.Library('kzladderoff')
+helpers.configureCxx(builder, binary, sdk)
+binary.compiler.defines += ['NOMINMAX']
+binary.compiler.linkflags += ['/PDBALTPATH:kzladderoff.pdb']
+binary.custom = [proto]
+binary.sources += [
+    os.path.join(sdk['path'], 'public', 'tier0', 'memoverride.cpp'),
+    os.path.join(sdk['path'], 'tier1', 'convar.cpp'),
+    os.path.join(sdk['path'], 'entity2', 'entityidentity.cpp'),
+    os.path.join(sdk['path'], 'entity2', 'entitysystem.cpp'),
+    'src/plugin.cpp',
+    'src/ladder.cpp',
+    'src/preferences.cpp',
+    'src/hud.cpp',
+]
+binary.compiler.cxxincludes += [builder.buildPath]
+builder.Add(binary)
+
+prefs_test = cxx.Program('kzladderoff-prefs-test')
+helpers.configureCxx(builder, prefs_test, sdk)
+prefs_test.sources += ['tests/preferences_test.cpp', 'src/preferences.cpp']
+builder.Add(prefs_test)

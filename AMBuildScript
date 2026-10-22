@@ -1,0 +1,41 @@
+import os
+
+
+mms_path = os.path.abspath(builder.options.mms_path)
+sdk_path = os.path.abspath(builder.options.sdk_path)
+helpers = builder.Eval(
+    os.path.join(mms_path, 'hl2sdk-manifests', 'SdkHelpers.ambuild'),
+    {'Project': 'metamod'},
+)
+
+cxx = builder.DetectCxx(target_arch='x86_64')
+if cxx.target.platform != 'windows':
+    raise Exception('KZLadderOff currently targets Windows x64 only.')
+
+cxx.defines += [
+    'META_IS_SOURCE2',
+    'SE_CS2=25',
+    'SOURCE_ENGINE=25',
+    'NDEBUG',
+    'WIN32',
+    '_WINDOWS',
+    '_CRT_SECURE_NO_WARNINGS',
+    '_CRT_NONSTDC_NO_DEPRECATE',
+    '_HAS_EXCEPTIONS=0',
+]
+cxx.cflags += ['/MT', '/utf-8', '/W3', '/O2', '/Zi']
+cxx.cxxflags += ['/std:c++17', '/TP']
+cxx.linkflags += ['/DEBUG', '/OPT:REF', '/OPT:ICF', '/ignore:4099', '/ignore:4098', 'kernel32.lib']
+cxx.cxxincludes += [
+    os.path.join(builder.sourcePath, 'src'),
+    os.path.join(builder.sourcePath, 'include'),
+    os.path.join(mms_path, 'core'),
+    os.path.join(mms_path, 'third_party', 'khook', 'include'),
+]
+
+helpers.find_sdk_path = lambda *args: sdk_path
+helpers.findSdks(builder, [cxx], ['cs2'])
+sdk = helpers.sdks['cs2']
+target = helpers.sdk_targets[0]
+
+builder.Build('AMBuilder', {'cxx': cxx, 'sdk': sdk, 'target': target, 'helpers': helpers})
